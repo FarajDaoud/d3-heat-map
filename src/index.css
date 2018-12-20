@@ -63,7 +63,7 @@ section {
   display: flex;
 }
 
-#barChart{
+#heatMap{
   position: relative;
 }
 
@@ -72,5 +72,5 @@ section {
   width: 150px;
   height: 50px;
   padding: 2px;
-  background: lightblue;
+  background: rgb(246, 250, 0);
 }
