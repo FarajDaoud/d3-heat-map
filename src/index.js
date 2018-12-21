@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function(){
         });
     
         const margin = {top: 75, right: 150, bottom: 0, left: 130}
-        ,barWidth = 5
+        ,barWidth = 6
         ,barHeight = 33
         ,numberOfBars = Math.ceil(json.monthlyVariance.length/12)
         ,graphWidth = barWidth * numberOfBars
@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function(){
         ,maxMonth = d3.max(data, (d) => d.month)
         ,minVariance = d3.min(data, (d) => d.variance)
         ,maxVariance = d3.max(data, (d) => d.variance)
-        ,monthArr = ['January', 'Februrary', 'March', 'April', 'May', 'June', 'July' ,'August' ,'September' ,'October' ,'November', 'December']
         ,colorArr = ['rgb(0, 100, 250)', 'rgb(0, 150, 250)', 'rgb(0, 200, 250)', 'rgb(0, 250, 250)'
                     ,'rgb(250, 200, 0)', 'rgb(250, 150, 0)', 'rgb(250, 200, 0)', 'rgb(250, 0, 0)'];
 
@@ -43,14 +42,17 @@ document.addEventListener('DOMContentLoaded', function(){
             .append("g");
 
         let yScale = d3.scaleBand()
-            .domain([0,1,2,3,4,5,6,7,8,9,10,11])
+            .domain(data.map((d) => d.month))
             .rangeRound([0, graphHeight]);
 
         let yAxis = d3.axisLeft()
             .scale(yScale)
             .tickValues(yScale.domain())
-            .tickFormat((month) => monthArr[month])
-            .tickSize(10, 1);
+            .tickFormat((month) => {
+                let date = new Date(0);
+                date.setMonth(month);
+                return d3.timeFormat('%B')(date);
+            });
         
         svg.append('g')
             .attr('transform', `translate(${margin.left}, 0)`)
@@ -72,8 +74,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 let date = new Date(0);
                 date.setFullYear(year);
                 return d3.timeFormat('%Y')(date);
-            })
-            .tickSize(10, 1);
+            });
 
         svg.append('g')
             .attr('transform', `translate(${margin.left}, ${graphHeight})`)
@@ -85,8 +86,29 @@ document.addEventListener('DOMContentLoaded', function(){
             .attr('transform', `translate(${graphWidth /2}, ${graphHeight + 60})`)
 
         let colorScale = d3.scaleQuantile()
-            .domain(data.map((d) => d.variance))
+            .domain(data.map((d) => json.baseTemperature + d.variance))
             .range(colorArr);
+
+        let legend = svg.selectAll('.legend')
+            .data(colorScale.quantiles().map((d) => d));
+        
+        legend.enter().append('g')
+            .attr('class', 'legend')
+            .attr('id', 'legend');
+        
+        legend.append('rect')
+            .attr('x', (d,i) => 10 * i)
+            .attr('y', graphHeight + 120)
+            .attr('width', barWidth * 2)
+            .attr('height', barHeight)
+            .style('fill', (d, i) => colorArr[i]);
+
+        legend.append('text')
+            .text((d) => d)
+            .attr('x', (d, i) => 10 * i)
+            .attr('y', graphHeight + barHeight);
+            
+        
 
         console.log(`xScale(minYear): ${xScale(minYear)}\nxScale(maxYear): ${xScale(maxYear)}`);
         console.log(`yScale(minMonth): ${yScale(minMonth)}\nyScale(maxMonth): ${yScale(maxMonth)}`);
@@ -97,13 +119,13 @@ document.addEventListener('DOMContentLoaded', function(){
             .enter().append('rect')
             .attr('x', (d) => xScale(d.year))
             .attr('y', (d) => yScale(d.month))
-            .attr('width', barWidth)
-            .attr('height', barHeight)
-            .attr('fill', (d) => colorScale(d.variance))
+            .attr('width', (d) => xScale.bandwidth())
+            .attr('height', (d) => yScale.bandwidth())
+            .attr('fill', (d) => colorScale(json.baseTemperature + d.variance))
             .attr('class', 'cell')
             .attr('data-month', (d) => d.month)
             .attr('data-year', (d) => d.year)
-            .attr('data-temp', (d) => d.variance)
-            .attr('transform', `translate(130, 0)`)
+            .attr('data-temp', (d) => json.baseTemperature + d.variance)
+            .attr('transform', `translate(${margin.left}, 0)`)
     };
 });
