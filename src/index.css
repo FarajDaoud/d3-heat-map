@@ -70,7 +70,7 @@ section {
 #tooltip {
   position: absolute;
   width: 150px;
-  height: 50px;
+  height: 70px;
   padding: 2px;
-  background: rgb(246, 250, 0);
+  background: lightblue;
 }
